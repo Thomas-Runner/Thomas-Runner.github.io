@@ -67,9 +67,12 @@ toggle.addEventListener('click', () => {
     content.style.maxHeight = '900px';
   }
   // === CONFIG: Replace with your access token ===
-const ACCESS_TOKEN = 2991cd363142869a914aa347c41fba88ff3c9526; // <- put your token here
+// === Thomas Runs: Personal Bests Loader ===
 
-// Distances to check (meters)
+// Use your current Strava access token here
+const ACCESS_TOKEN = "2991cd363142869a914aa347c41fba88ff3c9526";
+
+// Distances in meters for PBs
 const DISTANCES = {
   "1 km": 1000,
   "1 mile": 1609.34,
@@ -80,21 +83,21 @@ const DISTANCES = {
   "30 km": 30000,
   "Marathon": 42195,
   "50 km": 50000,
-  "Backyard": 0 // placeholder value for now
+  "Backyard": 0  // placeholder
 };
 
-// Fetch activities from Strava
+// Fetch your recent activities from Strava
 async function fetchStravaActivities() {
-  const response = await fetch(
-    "https://www.strava.com/api/v3/athlete/activities?per_page=200",
-    {
-      headers: {
-        Authorization: `Bearer ${ACCESS_TOKEN}`,
-      },
-    }
-  );
-  const data = await response.json();
-  return data;
+  try {
+    const res = await fetch("https://www.strava.com/api/v3/athlete/activities?per_page=200", {
+      headers: { Authorization: `Bearer ${ACCESS_TOKEN}` }
+    });
+    const data = await res.json();
+    return data;
+  } catch (err) {
+    console.error("Error fetching Strava activities:", err);
+    return [];
+  }
 }
 
 // Compute Personal Bests
@@ -102,16 +105,15 @@ function computePBs(activities) {
   const pbs = {};
   for (const [label, targetDist] of Object.entries(DISTANCES)) {
     if (label === "Backyard") {
-      pbs[label] = 10; // Placeholder value
+      pbs[label] = 10; // placeholder
       continue;
     }
     const runs = activities.filter(
-      (a) => a.type === "Run" && Math.abs(a.distance - targetDist) < 50
-    ); // ±50m tolerance
+      a => a.type === "Run" && Math.abs(a.distance - targetDist) < 50
+    );
     if (runs.length > 0) {
-      // Find run with minimal moving_time
       const best = runs.reduce(
-        (min, run) => (run.moving_time < min.moving_time ? run : min),
+        (min, run) => run.moving_time < min.moving_time ? run : min,
         runs[0]
       );
       pbs[label] = best.moving_time;
@@ -122,7 +124,7 @@ function computePBs(activities) {
   return pbs;
 }
 
-// Convert seconds to mm:ss format
+// Convert seconds to mm:ss
 function formatTime(seconds) {
   if (seconds === null) return "—";
   const mins = Math.floor(seconds / 60);
@@ -130,28 +132,24 @@ function formatTime(seconds) {
   return `${mins}:${secs.toString().padStart(2, "0")}`;
 }
 
-// Update DOM
+// Update Personal Bests table in the DOM
 function updatePBsDOM(pbs) {
-  for (const row of document.querySelectorAll(".pb-row")) {
+  document.querySelectorAll(".pb-row").forEach(row => {
     const label = row.children[0].innerText.trim();
     if (pbs[label] != null) {
       row.children[1].innerText = formatTime(pbs[label]);
     }
-  }
+  });
 }
 
-// Main function to run on page load
+// Main function to populate PBs
 async function populatePBs() {
-  try {
-    const activities = await fetchStravaActivities();
-    const pbs = computePBs(activities);
-    updatePBsDOM(pbs);
-  } catch (err) {
-    console.error("Error fetching Strava activities:", err);
-  }
+  const activities = await fetchStravaActivities();
+  const pbs = computePBs(activities);
+  updatePBsDOM(pbs);
 }
 
-// Call function on page load
+// Run on page load
 document.addEventListener("DOMContentLoaded", populatePBs);
 
 });
