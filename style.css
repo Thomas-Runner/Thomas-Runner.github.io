@@ -79,8 +79,8 @@ a{color:inherit;text-decoration:none}
 *::-webkit-scrollbar-thumb{background:linear-gradient(180deg,var(--accent),var(--accent-2));border-radius:20px}
 
 /* Adjust runs grid with 8 equal columns */
-.runs-and-summary{display:grid;grid-template-columns:repeat(8,1fr);gap:10px}
-.runs-grid{grid-column:span 7;display:grid;grid-template-columns:repeat(7,1fr);gap:10px}
+.runs-and-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.runs-grid{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
 .runs-summary{grid-column:span 1;padding:10px;font-size:14px}
 
 /* Personal Bests */
