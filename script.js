@@ -32,7 +32,7 @@ runs.forEach(run => {
     <div class="run-date">${new Date(run.date).toLocaleDateString('en-GB',{weekday:'short', day:'2-digit', month:'short'})}</div>
     <div class="run-type">${run.type}</div>
     <div class="run-meta">
-      <span>${run.distance_km.toFixed(1)} km</span>
+      <span>${run.distance_km.toFixed(2)} km</span>
       <span>${minsToHMM(run.time_min)}</span>
     </div>
   `;
@@ -42,15 +42,15 @@ runs.forEach(run => {
 // Summary box
 const totalDist = runs.reduce((s,r)=>s+r.distance_km,0);
 const totalTime = runs.reduce((s,r)=>s+r.time_min,0);
-document.getElementById('sum-distance').textContent = totalDist.toFixed(1) + ' km';
+document.getElementById('sum-distance').textContent = totalDist.toFixed(2) + ' km';
 document.getElementById('sum-time').textContent = minsToHMM(totalTime);
 document.getElementById('sum-pace').textContent = paceFrom(totalDist, totalTime);
 
 // Placeholder metric values (derived)
-document.getElementById('m-weekly').textContent = totalDist.toFixed(1) + ' km';
+document.getElementById('m-weekly').textContent = totalDist.toFixed(2) + ' km';
 document.getElementById('m-pace').textContent = paceFrom(totalDist, totalTime);
 document.getElementById('m-elev').textContent = '640 m';
-document.getElementById('m-longest').textContent = Math.max(...runs.map(r=>r.distance_km)).toFixed(1) + ' km';
+document.getElementById('m-longest').textContent = Math.max(...runs.map(r=>r.distance_km)).toFixed(2) + ' km';
 document.getElementById('m-streak').textContent = '9 days';
 
 // Accordion behavior (collapse content but keep sidebar width)
