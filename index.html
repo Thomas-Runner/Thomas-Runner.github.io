@@ -1,11 +1,159 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="UTF-8">
-    <title>My Custom GitHub Page</title>
-  </head>
-  <body>
-    <h1>Hello, world! 👋</h1>
-    <p>Welcome to my website hosted on GitHub Pages.</p>
-  </body>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RunnerLab — Home</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<header class="nav">
+  <div class="nav-inner">
+    <div class="brand">Runner<span>Lab</span></div>
+    <nav class="links">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="calendar.html" class="nav-link">Calendar</a>
+      <a href="all-runs.html" class="nav-link">All Runs</a>
+      <a href="race-results.html" class="nav-link">Race Results</a>
+      <a href="backyard-data.html" class="nav-link">Backyard Data</a>
+    </nav>
+  </div>
+</header>
+
+<main class="container">
+  <!-- Left Sidebar: Collapsible Inputs -->
+  <aside class="sidebar-left">
+    <div class="accordion">
+      <button class="accordion-toggle" aria-expanded="true">
+        <span>Quick Inputs (20)</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" class="chev"><path d="M8 10l4 4 4-4"/></svg>
+      </button>
+      <div class="accordion-content open">
+        <form class="quick-inputs">
+          <!-- 20 labeled inputs -->
+          <label for="inp1">Field 1</label>
+<input id="inp1" type="text" placeholder="Enter value..." />
+<label for="inp2">Field 2</label>
+<input id="inp2" type="text" placeholder="Enter value..." />
+<label for="inp3">Field 3</label>
+<input id="inp3" type="text" placeholder="Enter value..." />
+<label for="inp4">Field 4</label>
+<input id="inp4" type="text" placeholder="Enter value..." />
+<label for="inp5">Field 5</label>
+<input id="inp5" type="text" placeholder="Enter value..." />
+<label for="inp6">Field 6</label>
+<input id="inp6" type="text" placeholder="Enter value..." />
+<label for="inp7">Field 7</label>
+<input id="inp7" type="text" placeholder="Enter value..." />
+<label for="inp8">Field 8</label>
+<input id="inp8" type="text" placeholder="Enter value..." />
+<label for="inp9">Field 9</label>
+<input id="inp9" type="text" placeholder="Enter value..." />
+<label for="inp10">Field 10</label>
+<input id="inp10" type="text" placeholder="Enter value..." />
+<label for="inp11">Field 11</label>
+<input id="inp11" type="text" placeholder="Enter value..." />
+<label for="inp12">Field 12</label>
+<input id="inp12" type="text" placeholder="Enter value..." />
+<label for="inp13">Field 13</label>
+<input id="inp13" type="text" placeholder="Enter value..." />
+<label for="inp14">Field 14</label>
+<input id="inp14" type="text" placeholder="Enter value..." />
+<label for="inp15">Field 15</label>
+<input id="inp15" type="text" placeholder="Enter value..." />
+<label for="inp16">Field 16</label>
+<input id="inp16" type="text" placeholder="Enter value..." />
+<label for="inp17">Field 17</label>
+<input id="inp17" type="text" placeholder="Enter value..." />
+<label for="inp18">Field 18</label>
+<input id="inp18" type="text" placeholder="Enter value..." />
+<label for="inp19">Field 19</label>
+<input id="inp19" type="text" placeholder="Enter value..." />
+<label for="inp20">Field 20</label>
+<input id="inp20" type="text" placeholder="Enter value..." />
+          <button type="button" class="btn-primary save-btn">Save (placeholder)</button>
+        </form>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <section class="content">
+    <!-- Metric Cards (5) -->
+    <div class="metrics">
+      <div class="metric-card">
+        <div class="metric-icon"><svg viewBox='0 0 24 24'><path d='M4 18c0-2 2-3 4-3h3l4-7 3 2-4 7h-6v1c0 .6-.4 1-1 1H5c-.6 0-1-.4-1-1z'/></svg></div>
+        <div class="metric-text">
+          <div class="metric-label">Weekly Mileage</div>
+          <div class="metric-value" id="m-weekly">—</div>
+        </div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-icon"><svg viewBox='0 0 24 24'><path d='M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20zm1 5h-2v6l5 3 1-1-4-2V7z'/></svg></div>
+        <div class="metric-text">
+          <div class="metric-label">Avg Pace</div>
+          <div class="metric-value" id="m-pace">—</div>
+        </div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-icon"><svg viewBox='0 0 24 24'><path d='M3 20l7-12 3 5 2-3 6 10H3z'/></svg></div>
+        <div class="metric-text">
+          <div class="metric-label">Elevation Gain</div>
+          <div class="metric-value" id="m-elev">—</div>
+        </div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-icon"><svg viewBox='0 0 24 24'><path d='M5 3v18h2v-6h8l1 2h3V5h-3l-1-2H7v0H5z'/></svg></div>
+        <div class="metric-text">
+          <div class="metric-label">Longest Run</div>
+          <div class="metric-value" id="m-longest">—</div>
+        </div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-icon"><svg viewBox='0 0 24 24'><path d='M12 2s3 3 3 6-2 4-2 4 5 1 5 6-4 6-6 6-6-2-6-6 4-7 6-10z'/></svg></div>
+        <div class="metric-text">
+          <div class="metric-label">Streak</div>
+          <div class="metric-value" id="m-streak">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Runs Grid: 7 boxes + 1 smaller summary box -->
+    <div class="runs-and-summary">
+      <div class="runs-grid" id="runs-grid">
+        <!-- JS inserts 7 run cards here -->
+      </div>
+      <div class="runs-summary" id="runs-summary">
+        <h3>7‑Day Total</h3>
+        <div class="summary-line"><span>Distance</span><span id="sum-distance">—</span></div>
+        <div class="summary-line"><span>Time</span><span id="sum-time">—</span></div>
+        <div class="summary-line"><span>Avg Pace</span><span id="sum-pace">—</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Right Sidebar: Recent Highlights -->
+  <aside class="sidebar-right">
+    <div class="highlights">
+      <h3>Recent Highlights</h3>
+      <div class="highlights-table">
+        <div class="row header">
+          <div>Medal</div><div>Distance</div><div>Time</div>
+        </div>
+        <div class="row">
+          <div class="medal gold" title="Gold">🥇</div><div>21.1 km</div><div>1:28:42</div>
+        </div>
+        <div class="row">
+          <div class="medal silver" title="Silver">🥈</div><div>10 km</div><div>39:55</div>
+        </div>
+        <div class="row">
+          <div class="medal bronze" title="Bronze">🥉</div><div>5 km</div><div>19:12</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+</main>
+<script src="script.js"></script>
+</body>
 </html>
+
