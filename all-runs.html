@@ -10,17 +10,41 @@ body { background: #000; color: #fff; font-family: Arial, sans-serif; }
 table { border-collapse: collapse; width: 100%; margin: 20px 0; }
 th, td { border: 1px solid #444; padding: 8px 12px; text-align: center; }
 th { background: #111; cursor: pointer; color: #d8b3ff; } /* light purple header text */
+tr:nth-child(even) { background: rgba(100,50,255,0.03); } /* very transparent neon shading */
 tr:hover { background: rgba(100, 50, 255, 0.1); }
+
 .glow-gold { 
   background: gold; 
   color: #000; 
   font-weight: bold; 
-  animation: neonGlow 1.5s infinite alternate;
+  animation: neonGold 1.5s infinite alternate;
 }
-@keyframes neonGlow {
+.glow-silver {
+  background: silver;
+  color: #000;
+  font-weight: bold;
+  animation: neonSilver 1.5s infinite alternate;
+}
+.glow-bronze {
+  background: #cd7f32;
+  color: #000;
+  font-weight: bold;
+  animation: neonBronze 1.5s infinite alternate;
+}
+
+@keyframes neonGold {
   from { box-shadow: 0 0 5px gold, 0 0 10px gold; }
   to { box-shadow: 0 0 15px gold, 0 0 25px gold; }
 }
+@keyframes neonSilver {
+  from { box-shadow: 0 0 5px silver, 0 0 10px silver; }
+  to { box-shadow: 0 0 15px silver, 0 0 25px silver; }
+}
+@keyframes neonBronze {
+  from { box-shadow: 0 0 5px #cd7f32, 0 0 10px #cd7f32; }
+  to { box-shadow: 0 0 15px #cd7f32, 0 0 25px #cd7f32; }
+}
+
 th.sorted-asc::after { content: " ▲"; }
 th.sorted-desc::after { content: " ▼"; }
 @media (max-width: 1024px) { body { font-size: 14px; } table { font-size: 12px; } }
@@ -50,25 +74,24 @@ th.sorted-desc::after { content: " ▼"; }
 </main>
 
 <script>
-// --- Configuration ---
 const sheetID = "13o2LBSWWdkp7d8UgmLG2kxq8m3cPTQSS1W3cry5JyV8";
 const sheetTab = "run times";
-const columnsToShow = ["Date","1km (s)","1km","1mile","5km","10km","10mile","21.1km","30km","42.2km","50km","Distance","AVG","AVG Pace","Order","SS","ES","RS","CTL","ATL","TSB","Rank"];
-const timeCols = ["1km (s)","1km","1mile","5km","10km","10mile","21.1km","30km","42.2km","50km"];
+
+// Columns to display, without 'AVG' and '1km (s)'
+const columnsToShow = ["Date","1km","1mile","5km","10km","10mile","21.1km","30km","42.2km","50km","Distance","AVG Pace","Order","SS","ES","RS","CTL","ATL","TSB","Rank"];
+const timeCols = ["1km","1mile","5km","10km","10mile","21.1km","30km","42.2km","50km"];
 const highlightDistanceCol = "Distance";
 
-// --- Fetch CSV ---
+// Fetch CSV
 async function fetchSheetCSV() {
   const url = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetTab)}`;
   const res = await fetch(url);
-  const text = await res.text();
-  return text;
+  return await res.text();
 }
 
-// --- Parse CSV robustly ---
-function parseCSV(csvText) {
+// Parse CSV robustly
+function parseCSV(csvText){
   const lines = csvText.split(/\r?\n/).filter(l=>l.trim()!=="");
-  // Handle quoted CSV with commas inside
   const rows = [];
   const headers = lines[0].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(h=>h.replace(/^"|"$/g,'').trim());
   for(let i=1;i<lines.length;i++){
@@ -80,12 +103,11 @@ function parseCSV(csvText) {
   return { headers, rows };
 }
 
-// --- Build Table ---
-function buildTable(headers, rows) {
+// Build table
+function buildTable(headers, rows){
   const headerRow = document.getElementById("table-headers");
   headerRow.innerHTML = "";
-  const colMapping = columnsToShow.map(c => {
-    // find best match ignoring spaces and case
+  const colMapping = columnsToShow.map(c=>{
     return headers.find(h=>h.replace(/\s+/g,'').toLowerCase()===c.replace(/\s+/g,'').toLowerCase()) || null;
   });
   colMapping.forEach((h,i)=>{
@@ -111,8 +133,8 @@ function buildTable(headers, rows) {
   return colMapping;
 }
 
-// --- Sorting ---
-function makeSortable(colMapping) {
+// Sorting
+function makeSortable(colMapping){
   const headers = document.querySelectorAll("#table-headers th");
   headers.forEach((th,index)=>{
     th.addEventListener("click",()=>{
@@ -120,8 +142,8 @@ function makeSortable(colMapping) {
       const rows = Array.from(tbody.querySelectorAll("tr"));
       const isAsc = th.classList.contains("sorted-asc");
       rows.sort((a,b)=>{
-        let aVal = parseFloat(a.children[index].textContent) || 0;
-        let bVal = parseFloat(b.children[index].textContent) || 0;
+        let aVal = parseFloat(a.children[index].textContent)||0;
+        let bVal = parseFloat(b.children[index].textContent)||0;
         return isAsc? bVal-aVal : aVal-bVal;
       });
       rows.forEach(r=>tbody.appendChild(r));
@@ -132,8 +154,8 @@ function makeSortable(colMapping) {
   });
 }
 
-// --- Highlight lowest/highest ---
-function highlightCells(colMapping) {
+// Highlight lowest 3 and highest distance
+function highlightCells(colMapping){
   const tbody = document.getElementById("table-body");
   const rows = Array.from(tbody.querySelectorAll("tr"));
 
@@ -141,10 +163,14 @@ function highlightCells(colMapping) {
     const colIndex = colMapping.findIndex(c=>c && c.replace(/\s+/g,'').toLowerCase()===name.replace(/\s+/g,'').toLowerCase());
     if(colIndex===-1) return;
     let values = rows.map(r=>parseFloat(r.children[colIndex].textContent)||Infinity);
-    let minVal = Math.min(...values);
+    let sortedVals = Array.from(new Set(values)).sort((a,b)=>a-b); // unique sorted
+    const ranks = [sortedVals[0], sortedVals[1], sortedVals[2]]; // top 3
     rows.forEach(r=>{
-      r.children[colIndex].classList.remove("glow-gold");
-      if(parseFloat(r.children[colIndex].textContent)===minVal) r.children[colIndex].classList.add("glow-gold");
+      r.children[colIndex].classList.remove("glow-gold","glow-silver","glow-bronze");
+      const v = parseFloat(r.children[colIndex].textContent);
+      if(v===ranks[0]) r.children[colIndex].classList.add("glow-gold");
+      else if(v===ranks[1]) r.children[colIndex].classList.add("glow-silver");
+      else if(v===ranks[2]) r.children[colIndex].classList.add("glow-bronze");
     });
   });
 
@@ -159,7 +185,7 @@ function highlightCells(colMapping) {
   }
 }
 
-// --- Initialize ---
+// Initialize
 async function init(){
   const csvText = await fetchSheetCSV();
   const { headers, rows } = parseCSV(csvText);
