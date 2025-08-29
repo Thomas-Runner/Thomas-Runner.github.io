@@ -1,32 +1,153 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RunnerLab — All Runs</title>
-  <link rel="stylesheet" href="style.css" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Thomas Runs — All Runs</title>
+<link rel="stylesheet" href="style.css">
+<style>
+body { background: #000; color: #fff; font-family: Arial, sans-serif; }
+table { border-collapse: collapse; width: 100%; margin: 20px 0; }
+th, td { border: 1px solid #444; padding: 8px 12px; text-align: center; }
+th { background: #111; cursor: pointer; }
+tr:hover { background: rgba(100, 50, 255, 0.1); }
+th, td { transition: all 0.2s; }
+.glow-gold { background: gold; color: #000; box-shadow: 0 0 10px gold; font-weight: bold; }
+th.sorted-asc::after { content: " ▲"; }
+th.sorted-desc::after { content: " ▼"; }
+@media (max-width: 1024px) { body { font-size: 14px; } table { font-size: 12px; } }
+</style>
 </head>
 <body>
 <header class="nav">
   <div class="nav-inner">
-    <div class="brand">Runner<span>Lab</span></div>
+    <div class="brand">Thomas<span> Runs</span></div>
     <nav class="links">
       <a href="index.html" class="nav-link">Home</a>
       <a href="calendar.html" class="nav-link">Calendar</a>
-      <a href="all-runs.html" class="nav-link">All Runs</a>
+      <a href="all-runs.html" class="nav-link active">All Runs</a>
       <a href="race-results.html" class="nav-link">Race Results</a>
       <a href="backyard-data.html" class="nav-link">Backyard Data</a>
     </nav>
   </div>
 </header>
 
-<main class="container page-blank">
-  <section class="blank">
-    <h1>All Runs</h1>
-    <p>This page is intentionally left blank for now. The theme and navigation are in place.</p>
-  </section>
+<main class="container">
+  <table id="runs-table">
+    <thead>
+      <tr id="table-headers"></tr>
+    </thead>
+    <tbody id="table-body"></tbody>
+  </table>
 </main>
-<script src="script.js"></script>
+
+<script>
+// --- Configuration ---
+const sheetID = "13o2LBSWWdkp7d8UgmLG2kxq8m3cPTQSS1W3cry5JyV8";
+const sheetTab = "run times";
+const columnsToShow = ["Date","1km (s)","1km","1mile","5km","10km","10mile","21.1km","30km","42.2km","50km","Distance","AVG","AVG Pace","Order","SS","ES","RS","CTL","ATL","TSB","Rank"];
+const timeCols = ["1km (s)","1km","1mile","5km","10km","10mile","21.1km","30km","42.2km","50km"];
+const highlightDistanceCol = "Distance";
+
+// --- Fetch Google Sheet as JSON ---
+async function fetchSheet() {
+  const url = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetTab)}`;
+  const res = await fetch(url);
+  let text = await res.text();
+  // Strip google callback
+  text = text.substring(text.indexOf("{"), text.lastIndexOf("}")+1);
+  const data = JSON.parse(text);
+  return data.table.rows;
+}
+
+// --- Build Table ---
+function buildTable(rows) {
+  const headerRow = document.getElementById("table-headers");
+  columnsToShow.forEach(col => {
+    const th = document.createElement("th");
+    th.textContent = col;
+    th.dataset.col = col;
+    headerRow.appendChild(th);
+  });
+
+  const tbody = document.getElementById("table-body");
+  tbody.innerHTML = "";
+  rows.forEach(r => {
+    const tr = document.createElement("tr");
+    columnsToShow.forEach(col => {
+      const cell = document.createElement("td");
+      let val = "";
+      r.c.forEach(c => {
+        if(c && c.f && c.f.includes && c.f.includes(col)) val = c.f;
+      });
+      cell.textContent = val || "";
+      tr.appendChild(cell);
+    });
+    tbody.appendChild(tr);
+  });
+}
+
+// --- Sorting ---
+function makeSortable() {
+  const headers = document.querySelectorAll("#table-headers th");
+  headers.forEach(th => {
+    th.addEventListener("click", () => {
+      const table = document.getElementById("runs-table");
+      const tbody = table.querySelector("tbody");
+      const rows = Array.from(tbody.querySelectorAll("tr"));
+      const colIndex = Array.from(th.parentNode.children).indexOf(th);
+      const isAsc = th.classList.contains("sorted-asc");
+      rows.sort((a,b) => {
+        let aVal = parseFloat(a.children[colIndex].textContent) || 0;
+        let bVal = parseFloat(b.children[colIndex].textContent) || 0;
+        return isAsc ? bVal - aVal : aVal - bVal;
+      });
+      rows.forEach(r => tbody.appendChild(r));
+      headers.forEach(h=>h.classList.remove("sorted-asc","sorted-desc"));
+      th.classList.add(isAsc ? "sorted-desc" : "sorted-asc");
+      highlightCells();
+    });
+  });
+}
+
+// --- Highlight lowest/highest ---
+function highlightCells() {
+  const tbody = document.getElementById("table-body");
+  const rows = Array.from(tbody.querySelectorAll("tr"));
+
+  timeCols.forEach(colName => {
+    let colIndex = columnsToShow.indexOf(colName);
+    if(colIndex===-1) return;
+    let values = rows.map(r => parseFloat(r.children[colIndex].textContent) || Infinity);
+    let minVal = Math.min(...values);
+    rows.forEach(r => {
+      r.children[colIndex].classList.remove("glow-gold");
+      if(parseFloat(r.children[colIndex].textContent) === minVal) r.children[colIndex].classList.add("glow-gold");
+    });
+  });
+
+  // Highest distance
+  let distIndex = columnsToShow.indexOf(highlightDistanceCol);
+  if(distIndex!==-1){
+    let values = rows.map(r => parseFloat(r.children[distIndex].textContent) || -Infinity);
+    let maxVal = Math.max(...values);
+    rows.forEach(r => {
+      r.children[distIndex].classList.remove("glow-gold");
+      if(parseFloat(r.children[distIndex].textContent) === maxVal) r.children[distIndex].classList.add("glow-gold");
+    });
+  }
+}
+
+// --- Initialize ---
+async function init() {
+  const rows = await fetchSheet();
+  buildTable(rows);
+  highlightCells();
+  makeSortable();
+}
+
+document.addEventListener("DOMContentLoaded", init);
+</script>
 </body>
 </html>
 
