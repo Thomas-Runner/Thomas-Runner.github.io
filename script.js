@@ -1,4 +1,3 @@
-
 // Sample realistic data for 7 days
 const runs = [
   { date: '2025-08-23', type: 'Easy Run', distance_km: 8.2, time_min: 41 },
@@ -46,14 +45,58 @@ document.getElementById('sum-distance').textContent = totalDist.toFixed(2) + ' k
 document.getElementById('sum-time').textContent = minsToHMM(totalTime);
 document.getElementById('sum-pace').textContent = paceFrom(totalDist, totalTime);
 
-// Placeholder metric values (derived)
+// Placeholder metric values (will be replaced with dynamic for 2025)
 document.getElementById('m-weekly').textContent = totalDist.toFixed(2) + ' km';
 document.getElementById('m-pace').textContent = paceFrom(totalDist, totalTime);
 document.getElementById('m-elev').textContent = '640 m';
 document.getElementById('m-longest').textContent = Math.max(...runs.map(r=>r.distance_km)).toFixed(2) + ' km';
 document.getElementById('m-streak').textContent = '9 days';
 
-// Accordion behavior (collapse content but keep sidebar width)
+// === Dynamic 2025 Metrics from Google Sheets ===
+const SHEET_ID = "13o2LBSWWdkp7d8UgmLG2kxq8m3cPTQSS1W3cry5JyV8";
+const TAB_NAME = "run times";
+const SHEET_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(TAB_NAME)}`;
+
+async function fetchSheetData() {
+  try {
+    const res = await fetch(SHEET_URL);
+    const text = await res.text();
+    const json = JSON.parse(text.substr(47).slice(0,-2)); // parse GViz response
+    return json.table.rows;
+  } catch (err) {
+    console.error("Error fetching sheet:", err);
+    return [];
+  }
+}
+
+function getWeeksIntoYear() {
+  const start = new Date("2025-01-01T00:00:00");
+  const now = new Date();
+  const diff = now - start;
+  return Math.max(1, Math.ceil(diff / (1000*60*60*24*7))); // at least 1 week
+}
+
+async function update2025Metrics() {
+  const rows = await fetchSheetData();
+  if (!rows.length) return;
+
+  let total2025 = 0;
+  rows.slice(70).forEach(r => {  // row 71 → index 70
+    const distanceCell = r.c[11]; // "Distance" col (based on your col order)
+    if (distanceCell && distanceCell.v) {
+      total2025 += parseFloat(distanceCell.v);
+    }
+  });
+
+  const weeks = getWeeksIntoYear();
+  document.getElementById("m-distance").textContent = total2025.toFixed(2) + " km";
+  document.getElementById("m-weekly").textContent = (total2025 / weeks).toFixed(2) + " km";
+}
+
+// Run after DOM load
+document.addEventListener("DOMContentLoaded", update2025Metrics);
+
+// === Accordion behavior (collapse content but keep sidebar width) ===
 const toggle = document.querySelector('.accordion-toggle');
 const content = document.querySelector('.accordion-content');
 toggle.addEventListener('click', () => {
@@ -66,13 +109,11 @@ toggle.addEventListener('click', () => {
     content.classList.add('open');
     content.style.maxHeight = '900px';
   }
-  // === CONFIG: Replace with your access token ===
+});
+
+// === CONFIG: Replace with your access token ===
 // === Thomas Runs: Personal Bests Loader ===
-
-// Use your current Strava access token here
 const ACCESS_TOKEN = "2991cd363142869a914aa347c41fba88ff3c9526";
-
-// Distances in meters for PBs
 const DISTANCES = {
   "1 km": 1000,
   "1 mile": 1609.34,
@@ -86,7 +127,6 @@ const DISTANCES = {
   "Backyard": 0  // placeholder
 };
 
-// Fetch your recent activities from Strava
 async function fetchStravaActivities() {
   try {
     const res = await fetch("https://www.strava.com/api/v3/athlete/activities?per_page=200", {
@@ -100,7 +140,6 @@ async function fetchStravaActivities() {
   }
 }
 
-// Compute Personal Bests
 function computePBs(activities) {
   const pbs = {};
   for (const [label, targetDist] of Object.entries(DISTANCES)) {
@@ -124,7 +163,6 @@ function computePBs(activities) {
   return pbs;
 }
 
-// Convert seconds to mm:ss
 function formatTime(seconds) {
   if (seconds === null) return "—";
   const mins = Math.floor(seconds / 60);
@@ -132,7 +170,6 @@ function formatTime(seconds) {
   return `${mins}:${secs.toString().padStart(2, "0")}`;
 }
 
-// Update Personal Bests table in the DOM
 function updatePBsDOM(pbs) {
   document.querySelectorAll(".pb-row").forEach(row => {
     const label = row.children[0].innerText.trim();
@@ -142,14 +179,10 @@ function updatePBsDOM(pbs) {
   });
 }
 
-// Main function to populate PBs
 async function populatePBs() {
   const activities = await fetchStravaActivities();
   const pbs = computePBs(activities);
   updatePBsDOM(pbs);
 }
 
-// Run on page load
 document.addEventListener("DOMContentLoaded", populatePBs);
-
-});
