@@ -66,4 +66,92 @@ toggle.addEventListener('click', () => {
     content.classList.add('open');
     content.style.maxHeight = '900px';
   }
+  // === CONFIG: Replace with your access token ===
+const ACCESS_TOKEN = 2991cd363142869a914aa347c41fba88ff3c9526; // <- put your token here
+
+// Distances to check (meters)
+const DISTANCES = {
+  "1 km": 1000,
+  "1 mile": 1609.34,
+  "5 km": 5000,
+  "10 km": 10000,
+  "10 miles": 16093.4,
+  "Half M": 21097.5,
+  "30 km": 30000,
+  "Marathon": 42195,
+  "50 km": 50000,
+  "Backyard": 0 // placeholder value for now
+};
+
+// Fetch activities from Strava
+async function fetchStravaActivities() {
+  const response = await fetch(
+    "https://www.strava.com/api/v3/athlete/activities?per_page=200",
+    {
+      headers: {
+        Authorization: `Bearer ${ACCESS_TOKEN}`,
+      },
+    }
+  );
+  const data = await response.json();
+  return data;
+}
+
+// Compute Personal Bests
+function computePBs(activities) {
+  const pbs = {};
+  for (const [label, targetDist] of Object.entries(DISTANCES)) {
+    if (label === "Backyard") {
+      pbs[label] = 10; // Placeholder value
+      continue;
+    }
+    const runs = activities.filter(
+      (a) => a.type === "Run" && Math.abs(a.distance - targetDist) < 50
+    ); // ±50m tolerance
+    if (runs.length > 0) {
+      // Find run with minimal moving_time
+      const best = runs.reduce(
+        (min, run) => (run.moving_time < min.moving_time ? run : min),
+        runs[0]
+      );
+      pbs[label] = best.moving_time;
+    } else {
+      pbs[label] = null;
+    }
+  }
+  return pbs;
+}
+
+// Convert seconds to mm:ss format
+function formatTime(seconds) {
+  if (seconds === null) return "—";
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${mins}:${secs.toString().padStart(2, "0")}`;
+}
+
+// Update DOM
+function updatePBsDOM(pbs) {
+  for (const row of document.querySelectorAll(".pb-row")) {
+    const label = row.children[0].innerText.trim();
+    if (pbs[label] != null) {
+      row.children[1].innerText = formatTime(pbs[label]);
+    }
+  }
+}
+
+// Main function to run on page load
+async function populatePBs() {
+  try {
+    const activities = await fetchStravaActivities();
+    const pbs = computePBs(activities);
+    updatePBsDOM(pbs);
+  } catch (err) {
+    console.error("Error fetching Strava activities:", err);
+  }
+}
+
+// Call function on page load
+document.addEventListener("DOMContentLoaded", populatePBs);
+
 });
