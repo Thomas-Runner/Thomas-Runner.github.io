@@ -9,9 +9,8 @@
 body { background: #000; color: #fff; font-family: Arial, sans-serif; }
 table { border-collapse: collapse; width: 100%; margin: 20px 0; }
 th, td { border: 1px solid #444; padding: 8px 12px; text-align: center; }
-th { background: #111; cursor: pointer; }
+th { background: #111; cursor: pointer; color: #d8b3ff; } /* light purple header text */
 tr:hover { background: rgba(100, 50, 255, 0.1); }
-th, td { transition: all 0.2s; }
 .glow-gold { background: gold; color: #000; box-shadow: 0 0 10px gold; font-weight: bold; }
 th.sorted-asc::after { content: " ▲"; }
 th.sorted-desc::after { content: " ▼"; }
@@ -49,20 +48,31 @@ const columnsToShow = ["Date","1km (s)","1km","1mile","5km","10km","10mile","21.
 const timeCols = ["1km (s)","1km","1mile","5km","10km","10mile","21.1km","30km","42.2km","50km"];
 const highlightDistanceCol = "Distance";
 
-// --- Fetch Google Sheet as JSON ---
-async function fetchSheet() {
-  const url = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetTab)}`;
+// --- Fetch CSV from Google Sheets ---
+async function fetchSheetCSV() {
+  const url = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(sheetTab)}`;
   const res = await fetch(url);
-  let text = await res.text();
-  // Strip google callback
-  text = text.substring(text.indexOf("{"), text.lastIndexOf("}")+1);
-  const data = JSON.parse(text);
-  return data.table.rows;
+  const text = await res.text();
+  return text;
+}
+
+// --- Parse CSV ---
+function parseCSV(csvText) {
+  const lines = csvText.split("\n").filter(l=>l.trim()!=="");
+  const headers = lines[0].split(",").map(h=>h.trim());
+  const rows = lines.slice(1).map(line => {
+    const vals = line.split(",");
+    const obj = {};
+    headers.forEach((h,i)=>obj[h]=vals[i]||"");
+    return obj;
+  });
+  return rows;
 }
 
 // --- Build Table ---
 function buildTable(rows) {
   const headerRow = document.getElementById("table-headers");
+  headerRow.innerHTML = "";
   columnsToShow.forEach(col => {
     const th = document.createElement("th");
     th.textContent = col;
@@ -75,13 +85,11 @@ function buildTable(rows) {
   rows.forEach(r => {
     const tr = document.createElement("tr");
     columnsToShow.forEach(col => {
-      const cell = document.createElement("td");
-      let val = "";
-      r.c.forEach(c => {
-        if(c && c.f && c.f.includes && c.f.includes(col)) val = c.f;
-      });
-      cell.textContent = val || "";
-      tr.appendChild(cell);
+      const td = document.createElement("td");
+      let val = r[col] || "";
+      if(!isNaN(val) && val!=="") val = parseFloat(val).toFixed(2);
+      td.textContent = val;
+      tr.appendChild(td);
     });
     tbody.appendChild(tr);
   });
@@ -92,19 +100,18 @@ function makeSortable() {
   const headers = document.querySelectorAll("#table-headers th");
   headers.forEach(th => {
     th.addEventListener("click", () => {
-      const table = document.getElementById("runs-table");
-      const tbody = table.querySelector("tbody");
+      const tbody = document.getElementById("table-body");
       const rows = Array.from(tbody.querySelectorAll("tr"));
       const colIndex = Array.from(th.parentNode.children).indexOf(th);
       const isAsc = th.classList.contains("sorted-asc");
-      rows.sort((a,b) => {
+      rows.sort((a,b)=>{
         let aVal = parseFloat(a.children[colIndex].textContent) || 0;
         let bVal = parseFloat(b.children[colIndex].textContent) || 0;
         return isAsc ? bVal - aVal : aVal - bVal;
       });
-      rows.forEach(r => tbody.appendChild(r));
+      rows.forEach(r=>tbody.appendChild(r));
       headers.forEach(h=>h.classList.remove("sorted-asc","sorted-desc"));
-      th.classList.add(isAsc ? "sorted-desc" : "sorted-asc");
+      th.classList.add(isAsc?"sorted-desc":"sorted-asc");
       highlightCells();
     });
   });
@@ -118,29 +125,29 @@ function highlightCells() {
   timeCols.forEach(colName => {
     let colIndex = columnsToShow.indexOf(colName);
     if(colIndex===-1) return;
-    let values = rows.map(r => parseFloat(r.children[colIndex].textContent) || Infinity);
+    let values = rows.map(r => parseFloat(r.children[colIndex].textContent)||Infinity);
     let minVal = Math.min(...values);
-    rows.forEach(r => {
+    rows.forEach(r=>{
       r.children[colIndex].classList.remove("glow-gold");
-      if(parseFloat(r.children[colIndex].textContent) === minVal) r.children[colIndex].classList.add("glow-gold");
+      if(parseFloat(r.children[colIndex].textContent)===minVal) r.children[colIndex].classList.add("glow-gold");
     });
   });
 
-  // Highest distance
   let distIndex = columnsToShow.indexOf(highlightDistanceCol);
   if(distIndex!==-1){
-    let values = rows.map(r => parseFloat(r.children[distIndex].textContent) || -Infinity);
+    let values = rows.map(r => parseFloat(r.children[distIndex].textContent)||-Infinity);
     let maxVal = Math.max(...values);
-    rows.forEach(r => {
+    rows.forEach(r=>{
       r.children[distIndex].classList.remove("glow-gold");
-      if(parseFloat(r.children[distIndex].textContent) === maxVal) r.children[distIndex].classList.add("glow-gold");
+      if(parseFloat(r.children[distIndex].textContent)===maxVal) r.children[distIndex].classList.add("glow-gold");
     });
   }
 }
 
 // --- Initialize ---
 async function init() {
-  const rows = await fetchSheet();
+  const csvText = await fetchSheetCSV();
+  const rows = parseCSV(csvText);
   buildTable(rows);
   highlightCells();
   makeSortable();
