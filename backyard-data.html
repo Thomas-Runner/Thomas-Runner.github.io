@@ -20,11 +20,164 @@
   </div>
 </header>
 
-<main class="container page-blank">
-  <section class="blank">
-    <h1>Backyard Data</h1>
-    <p>This page is intentionally left blank for now. The theme and navigation are in place.</p>
-  </section>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Backyard Data</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <style>
+    body {
+      background-color: #0b0b1a;
+      color: #f0f0f5;
+      font-family: 'Segoe UI', sans-serif;
+      padding: 20px;
+    }
+    h1 {
+      color: #b388ff;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #161628;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 0 15px rgba(179, 136, 255, 0.3);
+    }
+    th, td {
+      padding: 10px 14px;
+      text-align: left;
+    }
+    th {
+      background: #1f1f3a;
+      color: #c9a0ff;
+      cursor: pointer;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+    tr:nth-child(even) {
+      background: #141425;
+    }
+    tr:hover {
+      background: #222245;
+    }
+    .glow-blue {
+      color: #66aaff;
+      text-shadow: 0 0 6px #66aaff;
+    }
+    .gbr-row {
+      background: linear-gradient(90deg, #ff0000 0%, #ffffff 50%, #0000ff 100%) !important;
+      color: #000;
+      font-weight: bold;
+    }
+    select {
+      background: #1f1f3a;
+      color: #fff;
+      border: 1px solid #b388ff;
+      border-radius: 6px;
+      padding: 5px 10px;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Backyard Ultra World Ranking</h1>
+  
+  <label for="natFilter">Filter by Nation:</label>
+  <select id="natFilter">
+    <option value="all">All</option>
+  </select>
+
+  <table id="backyardTable">
+    <thead>
+      <tr>
+        <th data-col="Rank">Rank</th>
+        <th data-col="Name">Name</th>
+        <th data-col="Nat">Nat</th>
+        <th data-col="Race">Race</th>
+        <th data-col="Date">Date</th>
+        <th data-col="Yards">Yards</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    const tableBody = document.querySelector("#backyardTable tbody");
+    const natFilter = document.getElementById("natFilter");
+    let data = [];
+
+    Papa.parse("BACKYARD - World Ranking (1).csv", {
+      download: true,
+      header: true,
+      complete: function(results) {
+        data = results.data.filter(row => row.Rank);
+        populateTable(data);
+        populateNatFilter(data);
+      }
+    });
+
+    function populateTable(rows) {
+      tableBody.innerHTML = "";
+      rows.forEach(row => {
+        const tr = document.createElement("tr");
+        if (row.Nat === "GBR") {
+          tr.classList.add("gbr-row");
+        }
+        ["Rank","Name","Nat","Race","Date","Yards"].forEach(col => {
+          const td = document.createElement("td");
+          td.textContent = row[col];
+          if (col === "Yards" && row[col] && row[col].includes("*")) {
+            td.classList.add("glow-blue");
+          }
+          tr.appendChild(td);
+        });
+        tableBody.appendChild(tr);
+      });
+    }
+
+    function populateNatFilter(rows) {
+      const nations = [...new Set(rows.map(r => r.Nat))].sort();
+      nations.forEach(nat => {
+        const opt = document.createElement("option");
+        opt.value = nat;
+        opt.textContent = nat;
+        natFilter.appendChild(opt);
+      });
+    }
+
+    natFilter.addEventListener("change", () => {
+      if (natFilter.value === "all") {
+        populateTable(data);
+      } else {
+        populateTable(data.filter(r => r.Nat === natFilter.value));
+      }
+    });
+
+    document.querySelectorAll("th").forEach(th => {
+      th.addEventListener("click", () => {
+        const col = th.dataset.col;
+        let sorted = [...data];
+        sorted.sort((a, b) => {
+          if (col === "Yards") {
+            const numA = parseInt((a.Yards || "").replace(/\D/g, "")) || 0;
+            const numB = parseInt((b.Yards || "").replace(/\D/g, "")) || 0;
+            return numB - numA;
+          } else if (!isNaN(a[col]) && !isNaN(b[col])) {
+            return a[col] - b[col];
+          } else {
+            return (a[col] || "").localeCompare(b[col] || "");
+          }
+        });
+        populateTable(sorted);
+      });
+    });
+  </script>
+</body>
+</html>
 </main>
 <script src="script.js"></script>
 </body>
