@@ -121,11 +121,23 @@ fetch("BACKYARD-World-Ranking-1.csv")
   .then(response => response.text())
   .then(csvText => {
     const results = Papa.parse(csvText, { header: true, skipEmptyLines: true });
-    data = results.data.filter(row => row.Rank);
+    let parsedData = results.data.filter(row => row.Rank);
+
+    // 🔹 Remove duplicates
+    const seen = new Set();
+    data = parsedData.filter(row => {
+      // Use all columns to make a unique key
+      const key = `${row.Name}|${row.Race}|${row.Date}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
     populateTable(data);
     populateNatFilter(data);
   })
   .catch(err => console.error("CSV load error:", err));
+
 
 function populateTable(rows) {
   tableBody.innerHTML = "";
