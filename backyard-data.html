@@ -5,31 +5,31 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>RunnerLab — Backyard Data</title>
   <link rel="stylesheet" href="style.css" />
-</head>
-<body>
-<header class="nav">
-  <div class="nav-inner">
-    <div class="brand">Runner<span>Lab</span></div>
-    <nav class="links">
-      <a href="index.html" class="nav-link">Home</a>
-      <a href="calendar.html" class="nav-link">Calendar</a>
-      <a href="all-runs.html" class="nav-link">All Runs</a>
-      <a href="race-results.html" class="nav-link">Race Results</a>
-      <a href="backyard-data.html" class="nav-link">Backyard Data</a>
-    </nav>
-  </div>
-</header>
+
+  <!-- PapaParse CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
   <style>
     body {
       background-color: #0b0b1a;
       color: #f0f0f5;
       font-family: 'Segoe UI', sans-serif;
       padding: 20px;
+      margin: 0;
+    }
+    header.nav {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      background: #0b0b1a;
+      z-index: 1000;
+      padding: 10px 20px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.5);
     }
     h1 {
       color: #b388ff;
       text-align: center;
-      margin-bottom: 20px;
+      margin: 120px 0 20px; /* Add top margin to avoid overlap with fixed header */
     }
     table {
       width: 100%;
@@ -77,102 +77,105 @@
   </style>
 </head>
 <body>
-  <h1>Backyard Ultra World Ranking</h1>
-  
-  <label for="natFilter">Filter by Nation:</label>
-  <select id="natFilter">
-    <option value="all">All</option>
-  </select>
+<header class="nav">
+  <div class="nav-inner">
+    <div class="brand">Runner<span>Lab</span></div>
+    <nav class="links">
+      <a href="index.html" class="nav-link">Home</a>
+      <a href="calendar.html" class="nav-link">Calendar</a>
+      <a href="all-runs.html" class="nav-link">All Runs</a>
+      <a href="race-results.html" class="nav-link">Race Results</a>
+      <a href="backyard-data.html" class="nav-link">Backyard Data</a>
+    </nav>
+  </div>
+</header>
 
-  <table id="backyardTable">
-    <thead>
-      <tr>
-        <th data-col="Rank">Rank</th>
-        <th data-col="Name">Name</th>
-        <th data-col="Nat">Nat</th>
-        <th data-col="Race">Race</th>
-        <th data-col="Date">Date</th>
-        <th data-col="Yards">Yards</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+<h1>Backyard Ultra World Ranking</h1>
 
-  <script>
-    const tableBody = document.querySelector("#backyardTable tbody");
-    const natFilter = document.getElementById("natFilter");
-    let data = [];
+<label for="natFilter">Filter by Nation:</label>
+<select id="natFilter">
+  <option value="all">All</option>
+</select>
 
-    Papa.parse("BACKYARD - World Ranking (1).csv", {
-      download: true,
-      header: true,
-      complete: function(results) {
-        data = results.data.filter(row => row.Rank);
-        populateTable(data);
-        populateNatFilter(data);
-      }
+<table id="backyardTable">
+  <thead>
+    <tr>
+      <th data-col="Rank">Rank</th>
+      <th data-col="Name">Name</th>
+      <th data-col="Nat">Nat</th>
+      <th data-col="Race">Race</th>
+      <th data-col="Date">Date</th>
+      <th data-col="Yards">Yards</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<script>
+const tableBody = document.querySelector("#backyardTable tbody");
+const natFilter = document.getElementById("natFilter");
+let data = [];
+
+// Load CSV
+Papa.parse("BACKYARD - World Ranking (1).csv", {
+  download: true,
+  header: true,
+  skipEmptyLines: true,
+  complete: function(results) {
+    data = results.data.filter(row => row.Rank);
+    populateTable(data);
+    populateNatFilter(data);
+  }
+});
+
+function populateTable(rows) {
+  tableBody.innerHTML = "";
+  rows.forEach(row => {
+    const tr = document.createElement("tr");
+    if (row.Nat === "GBR") tr.classList.add("gbr-row");
+    ["Rank","Name","Nat","Race","Date","Yards"].forEach(col => {
+      const td = document.createElement("td");
+      td.textContent = row[col] || "";
+      if (col === "Yards" && row[col] && row[col].includes("*")) td.classList.add("glow-blue");
+      tr.appendChild(td);
     });
+    tableBody.appendChild(tr);
+  });
+}
 
-    function populateTable(rows) {
-      tableBody.innerHTML = "";
-      rows.forEach(row => {
-        const tr = document.createElement("tr");
-        if (row.Nat === "GBR") {
-          tr.classList.add("gbr-row");
-        }
-        ["Rank","Name","Nat","Race","Date","Yards"].forEach(col => {
-          const td = document.createElement("td");
-          td.textContent = row[col];
-          if (col === "Yards" && row[col] && row[col].includes("*")) {
-            td.classList.add("glow-blue");
-          }
-          tr.appendChild(td);
-        });
-        tableBody.appendChild(tr);
-      });
-    }
+function populateNatFilter(rows) {
+  const nations = [...new Set(rows.map(r => r.Nat))].sort();
+  nations.forEach(nat => {
+    const opt = document.createElement("option");
+    opt.value = nat;
+    opt.textContent = nat;
+    natFilter.appendChild(opt);
+  });
+}
 
-    function populateNatFilter(rows) {
-      const nations = [...new Set(rows.map(r => r.Nat))].sort();
-      nations.forEach(nat => {
-        const opt = document.createElement("option");
-        opt.value = nat;
-        opt.textContent = nat;
-        natFilter.appendChild(opt);
-      });
-    }
+natFilter.addEventListener("change", () => {
+  if (natFilter.value === "all") populateTable(data);
+  else populateTable(data.filter(r => r.Nat === natFilter.value));
+});
 
-    natFilter.addEventListener("change", () => {
-      if (natFilter.value === "all") {
-        populateTable(data);
+document.querySelectorAll("th").forEach(th => {
+  th.addEventListener("click", () => {
+    const col = th.dataset.col;
+    let sorted = [...data];
+    sorted.sort((a, b) => {
+      if (col === "Yards") {
+        const numA = parseInt((a.Yards || "").replace(/\D/g, "")) || 0;
+        const numB = parseInt((b.Yards || "").replace(/\D/g, "")) || 0;
+        return numB - numA;
+      } else if (!isNaN(a[col]) && !isNaN(b[col])) {
+        return a[col] - b[col];
       } else {
-        populateTable(data.filter(r => r.Nat === natFilter.value));
+        return (a[col] || "").localeCompare(b[col] || "");
       }
     });
-
-    document.querySelectorAll("th").forEach(th => {
-      th.addEventListener("click", () => {
-        const col = th.dataset.col;
-        let sorted = [...data];
-        sorted.sort((a, b) => {
-          if (col === "Yards") {
-            const numA = parseInt((a.Yards || "").replace(/\D/g, "")) || 0;
-            const numB = parseInt((b.Yards || "").replace(/\D/g, "")) || 0;
-            return numB - numA;
-          } else if (!isNaN(a[col]) && !isNaN(b[col])) {
-            return a[col] - b[col];
-          } else {
-            return (a[col] || "").localeCompare(b[col] || "");
-          }
-        });
-        populateTable(sorted);
-      });
-    });
-  </script>
+    populateTable(sorted);
+  });
+});
+</script>
 </body>
 </html>
-</main>
-<script src="script.js"></script>
-</body>
-</html>
-
