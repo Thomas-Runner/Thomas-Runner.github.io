@@ -1,32 +1,98 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>RunnerLab — Calendar</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="UTF-8">
+  <title>Calendar</title>
+  <style>
+    body {
+      background-color: #0b0b1a;
+      color: #f0f0f5;
+      font-family: 'Segoe UI', sans-serif;
+      padding: 20px;
+    }
+    h1 {
+      color: #b388ff;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .calendar {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 4px;
+    }
+    .day, .summary {
+      border: 1px solid #333;
+      padding: 10px;
+      text-align: center;
+      min-height: 60px;
+      background: #161628;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .header {
+      background: #1f1f3a;
+      color: #c9a0ff;
+      font-weight: bold;
+    }
+    .summary {
+      font-weight: bold;
+    }
+    .glow-red { box-shadow: 0 0 10px red; }
+    .glow-yellow { box-shadow: 0 0 10px yellowgreen; }
+    .glow-green { box-shadow: 0 0 10px limegreen; }
+  </style>
 </head>
 <body>
-<header class="nav">
-  <div class="nav-inner">
-    <div class="brand">Runner<span>Lab</span></div>
-    <nav class="links">
-      <a href="index.html" class="nav-link">Home</a>
-      <a href="calendar.html" class="nav-link">Calendar</a>
-      <a href="all-runs.html" class="nav-link">All Runs</a>
-      <a href="race-results.html" class="nav-link">Race Results</a>
-      <a href="backyard-data.html" class="nav-link">Backyard Data</a>
-    </nav>
-  </div>
-</header>
+  <h1>Training Calendar</h1>
+  <div class="calendar" id="calendar"></div>
 
-<main class="container page-blank">
-  <section class="blank">
-    <h1>Calendar</h1>
-    <p>This page is intentionally left blank for now. The theme and navigation are in place.</p>
-  </section>
-</main>
-<script src="script.js"></script>
+  <script>
+    const weeks = 52;
+    const days = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun","Summary"];
+    const calendar = document.getElementById('calendar');
+
+    let data = Array.from({length: weeks}, () => Array(7).fill(null));
+
+    function renderCalendar() {
+      calendar.innerHTML = "";
+      days.forEach(d => {
+        const div = document.createElement('div');
+        div.textContent = d;
+        div.className = 'header';
+        calendar.appendChild(div);
+      });
+      for(let w=0; w<weeks; w++){
+        let weekTotal = 0;
+        for(let d=0; d<7; d++){
+          const div = document.createElement('div');
+          div.className = 'day';
+          if(data[w][d]){
+            div.textContent = data[w][d].type + " " + data[w][d].distance + "km (" + data[w][d].intensity + ")";
+            weekTotal += Number(data[w][d].distance);
+          } else {
+            div.textContent = "—";
+          }
+          div.onclick = () => {
+            const type = prompt("Enter type:");
+            const dist = prompt("Enter distance (km):");
+            const intensity = prompt("Enter intensity:");
+            if(type && dist && intensity){
+              data[w][d] = {type:type,distance:dist,intensity:intensity};
+              renderCalendar();
+            }
+          };
+          calendar.appendChild(div);
+        }
+        const sumDiv = document.createElement('div');
+        sumDiv.className = 'summary';
+        sumDiv.textContent = weekTotal + " km";
+        if(weekTotal < 40) sumDiv.classList.add('glow-red');
+        else if(weekTotal <= 60) sumDiv.classList.add('glow-yellow');
+        else sumDiv.classList.add('glow-green');
+        calendar.appendChild(sumDiv);
+      }
+    }
+    renderCalendar();
+  </script>
 </body>
 </html>
-
