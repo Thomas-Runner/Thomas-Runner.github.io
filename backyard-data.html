@@ -29,7 +29,7 @@
     h1 {
       color: #b388ff;
       text-align: center;
-      margin: 120px 0 20px; /* Add top margin to avoid overlap with fixed header */
+      margin: 120px 0 20px; /* avoid overlap with header */
     }
     table {
       width: 100%;
@@ -116,8 +116,8 @@ const tableBody = document.querySelector("#backyardTable tbody");
 const natFilter = document.getElementById("natFilter");
 let data = [];
 
-// Load CSV
-fetch("BACKYARD - World Ranking (1).csv")
+// Fetch CSV
+fetch("BACKYARD-World-Ranking-1.csv")
   .then(response => response.text())
   .then(csvText => {
     const results = Papa.parse(csvText, { header: true, skipEmptyLines: true });
@@ -126,7 +126,6 @@ fetch("BACKYARD - World Ranking (1).csv")
     populateNatFilter(data);
   })
   .catch(err => console.error("CSV load error:", err));
-
 
 function populateTable(rows) {
   tableBody.innerHTML = "";
