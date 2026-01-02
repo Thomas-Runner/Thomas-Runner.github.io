@@ -108,3 +108,45 @@ async function renderThisWeeksTraining() {
 }
 
 renderThisWeeksTraining();
+function formatTime(seconds) {
+  if (!seconds) return "";
+  const hrs = Math.floor(seconds / 3600);
+  const mins = Math.floor((seconds % 3600) / 60);
+  const secs = Math.floor(seconds % 60);
+
+  if (hrs > 0) {
+    return `${hrs}:${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`;
+  }
+  return `${mins}:${String(secs).padStart(2, "0")}`;
+}
+
+async function renderPBsAndGoals() {
+  const pbs = await loadCSV("data/pbs_goals.csv");
+  const tbody = document.querySelector("#pbsTable tbody");
+
+  tbody.innerHTML = "";
+
+  pbs.forEach(entry => {
+    const pb = entry.pb_time_sec ? parseInt(entry.pb_time_sec) : null;
+    const goal = entry.goal_time_sec ? parseInt(entry.goal_time_sec) : null;
+
+    let diff = "";
+    if (pb && goal) {
+      const delta = pb - goal;
+      diff = delta > 0
+        ? `-${formatTime(delta)}`
+        : `+${formatTime(Math.abs(delta))}`;
+    }
+
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${entry.distance_km}</td>
+      <td>${formatTime(pb)}</td>
+      <td>${formatTime(goal)}</td>
+      <td>${diff}</td>
+    `;
+    tbody.appendChild(row);
+  });
+}
+
+renderPBsAndGoals();
