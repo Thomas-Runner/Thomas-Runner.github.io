@@ -63,3 +63,48 @@ async function renderWeeklyMileage() {
 
 renderWeeklyMileage();
 
+function getStartOfWeek(date) {
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  return new Date(d.setDate(diff));
+}
+
+function isInCurrentWeek(dateStr) {
+  const today = new Date();
+  const startOfWeek = getStartOfWeek(today);
+  const endOfWeek = new Date(startOfWeek);
+  endOfWeek.setDate(endOfWeek.getDate() + 6);
+
+  const date = new Date(dateStr);
+  return date >= startOfWeek && date <= endOfWeek;
+}
+
+async function renderThisWeeksTraining() {
+  const plan = await loadCSV("data/training_plan.csv");
+  const tbody = document.querySelector("#trainingTable tbody");
+
+  const thisWeek = plan
+    .filter(entry => isInCurrentWeek(entry.date))
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+  tbody.innerHTML = "";
+
+  if (thisWeek.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="4">No training planned this week</td></tr>`;
+    return;
+  }
+
+  thisWeek.forEach(entry => {
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${entry.date}</td>
+      <td>${entry.planned_distance_km}</td>
+      <td>${entry.planned_type}</td>
+      <td>${entry.notes || ""}</td>
+    `;
+    tbody.appendChild(row);
+  });
+}
+
+renderThisWeeksTraining();
