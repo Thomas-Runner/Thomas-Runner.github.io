@@ -164,3 +164,57 @@ function groupRunsByWeek(runs) {
 
   return weeks;
 }
+async function renderRunsPerWeek() {
+  const runs = await loadCSV("data/runs.csv");
+  const weeklyData = groupRunsByWeek(runs);
+
+  const labels = Object.keys(weeklyData).sort();
+  const data = labels.map(week => weeklyData[week].count);
+
+  const ctx = document.getElementById("runsPerWeekChart");
+
+  new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [{
+        label: "Runs per Week",
+        data
+      }]
+    },
+    options: {
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            stepSize: 1
+          }
+        }
+      }
+    }
+  });
+}
+function calculateTrainingStreak(weeklyData) {
+  const weeks = Object.keys(weeklyData).sort().reverse();
+  let streak = 0;
+
+  for (const week of weeks) {
+    if (weeklyData[week].count > 0) {
+      streak++;
+    } else {
+      break;
+    }
+  }
+  return streak;
+}
+async function renderTrainingStreak() {
+  const runs = await loadCSV("data/runs.csv");
+  const weeklyData = groupRunsByWeek(runs);
+  const streak = calculateTrainingStreak(weeklyData);
+
+  const el = document.getElementById("trainingStreak");
+  el.textContent = `Current training streak: ${streak} week(s)`;
+}
+renderRunsPerWeek();
+renderTrainingStreak();
+
