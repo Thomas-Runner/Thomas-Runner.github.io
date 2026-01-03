@@ -150,3 +150,17 @@ async function renderPBsAndGoals() {
 }
 
 renderPBsAndGoals();
+function groupRunsByWeek(runs) {
+  const weeks = {};
+
+  runs.forEach(run => {
+    const week = getWeekKey(run.date);
+    if (!weeks[week]) {
+      weeks[week] = { count: 0, distance: 0 };
+    }
+    weeks[week].count += 1;
+    weeks[week].distance += parseFloat(run.distance_km);
+  });
+
+  return weeks;
+}
