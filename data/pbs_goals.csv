@@ -1,3 +1,4 @@
-distance_km,pb_time_sec,goal_time_sec
-12,1500,1600
-
+distance_km,goal_time_sec
+5,1140
+10,2400
+21.1,5100
