@@ -124,12 +124,18 @@ async function renderPBsAndGoals() {
   const races = await loadCSV("data/races.csv");
   const goals = await loadCSV("data/pbs_goals.csv");
 
-  // Build PB map from race + split data
+  // Build PB map per distance
   const pbMap = {};
+  const allTimesByDistance = {};
 
   races.forEach(entry => {
     const dist = parseFloat(entry.distance_km);
     const time = parseInt(entry.time_sec);
+
+    if (!allTimesByDistance[dist]) {
+      allTimesByDistance[dist] = [];
+    }
+    allTimesByDistance[dist].push(time);
 
     if (!pbMap[dist] || time < pbMap[dist].time) {
       pbMap[dist] = {
@@ -149,11 +155,24 @@ async function renderPBsAndGoals() {
     const pb = pbMap[dist];
 
     let diff = "";
-    if (pb && goalTime) {
+    let progressText = "";
+    let status = "Not started";
+
+    if (pb) {
       const delta = pb.time - goalTime;
       diff = delta > 0
         ? `-${formatTime(delta)}`
         : `+${formatTime(Math.abs(delta))}`;
+
+      const baseline = Math.max(...allTimesByDistance[dist]);
+
+      if (baseline !== goalTime) {
+        const progress =
+          ((baseline - pb.time) / (baseline - goalTime)) * 100;
+        progressText = `${Math.max(0, Math.min(100, progress)).toFixed(0)}%`;
+      }
+
+      status = pb.time <= goalTime ? "Achieved" : "In progress";
     }
 
     const sourceNote = pb
@@ -166,11 +185,12 @@ async function renderPBsAndGoals() {
       <td>${pb ? formatTime(pb.time) + sourceNote : ""}</td>
       <td>${formatTime(goalTime)}</td>
       <td>${diff}</td>
+      <td>${progressText}</td>
+      <td>${status}</td>
     `;
     tbody.appendChild(row);
   });
 }
-
 
 renderPBsAndGoals();
 function groupRunsByWeek(runs) {
