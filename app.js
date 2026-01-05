@@ -121,33 +121,56 @@ function formatTime(seconds) {
 }
 
 async function renderPBsAndGoals() {
-  const pbs = await loadCSV("data/pbs_goals.csv");
-  const tbody = document.querySelector("#pbsTable tbody");
+  const races = await loadCSV("data/races.csv");
+  const goals = await loadCSV("data/pbs_goals.csv");
 
+  // Build PB map from race + split data
+  const pbMap = {};
+
+  races.forEach(entry => {
+    const dist = parseFloat(entry.distance_km);
+    const time = parseInt(entry.time_sec);
+
+    if (!pbMap[dist] || time < pbMap[dist].time) {
+      pbMap[dist] = {
+        time,
+        source: entry.source,
+        event: entry.event_name
+      };
+    }
+  });
+
+  const tbody = document.querySelector("#pbsTable tbody");
   tbody.innerHTML = "";
 
-  pbs.forEach(entry => {
-    const pb = entry.pb_time_sec ? parseInt(entry.pb_time_sec) : null;
-    const goal = entry.goal_time_sec ? parseInt(entry.goal_time_sec) : null;
+  goals.forEach(goal => {
+    const dist = parseFloat(goal.distance_km);
+    const goalTime = parseInt(goal.goal_time_sec);
+    const pb = pbMap[dist];
 
     let diff = "";
-    if (pb && goal) {
-      const delta = pb - goal;
+    if (pb && goalTime) {
+      const delta = pb.time - goalTime;
       diff = delta > 0
         ? `-${formatTime(delta)}`
         : `+${formatTime(Math.abs(delta))}`;
     }
 
+    const sourceNote = pb
+      ? pb.source === "split" ? " (split)" : ""
+      : "";
+
     const row = document.createElement("tr");
     row.innerHTML = `
-      <td>${entry.distance_km}</td>
-      <td>${formatTime(pb)}</td>
-      <td>${formatTime(goal)}</td>
+      <td>${dist}</td>
+      <td>${pb ? formatTime(pb.time) + sourceNote : ""}</td>
+      <td>${formatTime(goalTime)}</td>
       <td>${diff}</td>
     `;
     tbody.appendChild(row);
   });
 }
+
 
 renderPBsAndGoals();
 function groupRunsByWeek(runs) {
