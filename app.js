@@ -260,4 +260,57 @@ async function renderTrainingStreak() {
 }
 renderRunsPerWeek();
 renderTrainingStreak();
+async function renderRaceStatistics() {
+  const races = await loadCSV("data/races.csv");
+
+  const total = races.length;
+  const byDistance = {};
+  const byYear = {};
+
+  races.forEach(entry => {
+    const dist = parseFloat(entry.distance_km);
+    const time = parseInt(entry.time_sec);
+    const date = new Date(entry.date);
+    const year = date.getFullYear();
+
+    if (!byDistance[dist]) {
+      byDistance[dist] = [];
+    }
+    byDistance[dist].push({ time, date });
+
+    if (!byYear[year]) {
+      byYear[year] = 0;
+    }
+    byYear[year]++;
+  });
+
+  // Summary text
+  const years = Object.keys(byYear).sort();
+  const summary = `Total recorded race efforts: ${total} (${years[0]}–${years[years.length - 1]})`;
+  document.getElementById("raceSummary").textContent = summary;
+
+  // Distance table
+  const tbody = document.querySelector("#raceStatsTable tbody");
+  tbody.innerHTML = "";
+
+  Object.keys(byDistance)
+    .sort((a, b) => parseFloat(a) - parseFloat(b))
+    .forEach(dist => {
+      const entries = byDistance[dist];
+      const attempts = entries.length;
+
+      const best = entries.reduce((a, b) => (a.time < b.time ? a : b));
+      const recent = entries.reduce((a, b) => (a.date > b.date ? a : b));
+
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${dist}</td>
+        <td>${attempts}</td>
+        <td>${formatTime(best.time)}</td>
+        <td>${recent.date.toISOString().slice(0, 10)}</td>
+      `;
+      tbody.appendChild(row);
+    });
+}
+renderRaceStatistics();
 
