@@ -66,6 +66,62 @@
     <tbody></tbody>
   </table>
 </section>
+<section>
+  <h2>Data Entry</h2>
+
+  <h3>Add Training Run</h3>
+  <form id="runForm">
+    <label>Date:
+      <input type="date" id="runDate" required>
+    </label><br>
+
+    <label>Distance (km):
+      <input type="number" step="0.01" id="runDistance" required>
+    </label><br>
+
+    <label>Avg Pace (sec/km):
+      <input type="number" id="runPace" required>
+    </label><br>
+
+    <label>Notes:
+      <input type="text" id="runNotes">
+    </label><br>
+
+    <button type="submit">Generate CSV Row</button>
+  </form>
+
+  <pre id="runOutput"></pre>
+
+  <h3>Add Race / Split</h3>
+  <form id="raceForm">
+    <label>Date:
+      <input type="date" id="raceDate" required>
+    </label><br>
+
+    <label>Distance (km):
+      <input type="number" step="0.01" id="raceDistance" required>
+    </label><br>
+
+    <label>Time (seconds):
+      <input type="number" id="raceTime" required>
+    </label><br>
+
+    <label>Event Name:
+      <input type="text" id="raceEvent" required>
+    </label><br>
+
+    <label>Source:
+      <select id="raceSource">
+        <option value="race">race</option>
+        <option value="split">split</option>
+      </select>
+    </label><br>
+
+    <button type="submit">Generate CSV Row</button>
+  </form>
+
+  <pre id="raceOutput"></pre>
+</section>
 
   <script src="app.js"></script>
 </body>
