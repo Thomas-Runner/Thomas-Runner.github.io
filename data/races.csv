@@ -1,2 +1,6 @@
 date,distance_km,time_sec,event_name,source
+2025-03-10,5,1200,City 10K,race
+2025-03-10,10,2480,City 10K,race
+2025-04-01,21.1,5400,Spring Half,race
+2025-04-01,10,2500,Spring Half (split),split
 
