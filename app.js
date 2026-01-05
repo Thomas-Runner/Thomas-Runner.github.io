@@ -313,4 +313,35 @@ async function renderRaceStatistics() {
     });
 }
 renderRaceStatistics();
+function csvEscape(value) {
+  if (!value) return "";
+  return value.replace(/,/g, ""); // enforce no commas
+}
+
+// Training run form
+document.getElementById("runForm").addEventListener("submit", e => {
+  e.preventDefault();
+
+  const date = document.getElementById("runDate").value;
+  const distance = document.getElementById("runDistance").value;
+  const pace = document.getElementById("runPace").value;
+  const notes = csvEscape(document.getElementById("runNotes").value);
+
+  const row = `${date},${distance},${pace},manual,${notes}`;
+  document.getElementById("runOutput").textContent = row;
+});
+
+// Race / split form
+document.getElementById("raceForm").addEventListener("submit", e => {
+  e.preventDefault();
+
+  const date = document.getElementById("raceDate").value;
+  const distance = document.getElementById("raceDistance").value;
+  const time = document.getElementById("raceTime").value;
+  const event = csvEscape(document.getElementById("raceEvent").value);
+  const source = document.getElementById("raceSource").value;
+
+  const row = `${date},${distance},${time},${event},${source}`;
+  document.getElementById("raceOutput").textContent = row;
+});
 
